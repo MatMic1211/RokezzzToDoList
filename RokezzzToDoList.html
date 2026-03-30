@@ -74,9 +74,10 @@ function addTask() {
     if (text === "") return;
 
     tasks.push({
-        text: text,
-        done: false
-    });
+    text: text,
+    done: false,
+    date: new Date().toLocaleDateString()
+});
 
     input.value = "";
     saveTasks();
@@ -112,7 +113,7 @@ function renderTasks() {
         let li = document.createElement("li");
 
         let span = document.createElement("span");
-        span.innerText = tasks[i].text;
+        span.innerText = tasks[i].text + " (" + tasks[i].date + ")";
         if (tasks[i].done) span.classList.add("done");
         span.onclick = function() {
             toggleTask(i);
