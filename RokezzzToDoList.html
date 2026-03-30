@@ -2,59 +2,131 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Lista TODO</title>
+    <title>Menedżer zadań</title>
+
+    <!-- Ikonki -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
     <style>
         body {
-            font-family: Arial;
-            background: #f0f0f0;
-            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #e6ecf0;
+            padding: 40px;
         }
 
         .box {
-            background: white;
-            padding: 20px;
-            max-width: 500px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            max-width: 520px;
             margin: auto;
-            border-radius: 10px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 15px;
         }
 
         input {
-            padding: 8px;
-            width: 70%;
+            padding: 12px;
+            width: 65%;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            outline: none;
+        }
+
+        input:focus {
+            border: 1px solid #6c8cff;
         }
 
         button {
-            padding: 8px;
-            margin: 2px;
+            padding: 12px;
+            margin: 3px;
+            border: none;
+            border-radius: 10px;
             cursor: pointer;
+            background: #6c8cff;
+            color: white;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            background: #4e6ee6;
         }
 
         li {
             list-style: none;
-            padding: 5px;
-            margin: 5px 0;
-            border-bottom: 1px solid #ccc;
+            padding: 10px;
+            margin: 6px 0;
+            border-radius: 10px;
+            background: #f7f9fc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .done {
             text-decoration: line-through;
             color: gray;
+            background: #e0e0e0;
+        }
+
+        #counter {
+            margin: 15px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .filters {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .delete-btn {
+            background: #ff6b6b;
+        }
+
+        .delete-btn:hover {
+            background: #e74c3c;
+        }
+
+        .done-btn {
+            background: #2ecc71;
+        }
+
+        .done-btn:hover {
+            background: #27ae60;
+        }
+
+        .icons {
+            display: flex;
+            gap: 5px;
         }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <h2>Lista zadań TODO</h2>
+    <h2><i class="fa-solid fa-list-check"></i> Menedżer zadań</h2>
 
     <input type="text" id="taskInput" placeholder="Wpisz zadanie">
-    <button onclick="addTask()">Dodaj</button>
+    <button onclick="addTask()">
+        <i class="fa-solid fa-plus"></i>
+    </button>
 
-    <br><br>
+    <p id="counter"></p>
 
-    <button onclick="setFilter('all')">Wszystkie</button>
-    <button onclick="setFilter('active')">Aktywne</button>
-    <button onclick="setFilter('done')">Wykonane</button>
+    <div class="filters">
+        <button onclick="setFilter('all')">Wszystkie</button>
+        <button onclick="setFilter('active')">Aktywne</button>
+        <button onclick="setFilter('done')">Wykonane</button>
+        <button onclick="deleteDone()">
+            <i class="fa-solid fa-trash"></i>
+        </button>
+    </div>
 
     <ul id="taskList"></ul>
 </div>
@@ -62,6 +134,10 @@
 <script>
 let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 let filter = "all";
+
+document.getElementById("taskInput").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") addTask();
+});
 
 function saveTasks() {
     localStorage.setItem("tasks", JSON.stringify(tasks));
@@ -74,10 +150,10 @@ function addTask() {
     if (text === "") return;
 
     tasks.push({
-    text: text,
-    done: false,
-    date: new Date().toLocaleDateString()
-});
+        text: text,
+        done: false,
+        date: new Date().toLocaleDateString()
+    });
 
     input.value = "";
     saveTasks();
@@ -96,6 +172,12 @@ function toggleTask(index) {
     renderTasks();
 }
 
+function deleteDone() {
+    tasks = tasks.filter(task => !task.done);
+    saveTasks();
+    renderTasks();
+}
+
 function setFilter(f) {
     filter = f;
     renderTasks();
@@ -105,28 +187,49 @@ function renderTasks() {
     let list = document.getElementById("taskList");
     list.innerHTML = "";
 
+    let all = tasks.length;
+    let done = tasks.filter(t => t.done).length;
+    let active = all - done;
+
+    document.getElementById("counter").innerText =
+        "Wszystkie: " + all + " | Aktywne: " + active + " | Wykonane: " + done;
+
     for (let i = 0; i < tasks.length; i++) {
 
         if (filter === "active" && tasks[i].done) continue;
         if (filter === "done" && !tasks[i].done) continue;
 
         let li = document.createElement("li");
+        if (tasks[i].done) li.classList.add("done");
 
         let span = document.createElement("span");
         span.innerText = tasks[i].text + " (" + tasks[i].date + ")";
-        if (tasks[i].done) span.classList.add("done");
         span.onclick = function() {
             toggleTask(i);
         };
 
+        let iconsDiv = document.createElement("div");
+        iconsDiv.classList.add("icons");
+
+        let doneBtn = document.createElement("button");
+        doneBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
+        doneBtn.classList.add("done-btn");
+        doneBtn.onclick = function() {
+            toggleTask(i);
+        };
+
         let delBtn = document.createElement("button");
-        delBtn.innerText = "Usuń";
+        delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+        delBtn.classList.add("delete-btn");
         delBtn.onclick = function() {
             deleteTask(i);
         };
 
+        iconsDiv.appendChild(doneBtn);
+        iconsDiv.appendChild(delBtn);
+
         li.appendChild(span);
-        li.appendChild(delBtn);
+        li.appendChild(iconsDiv);
         list.appendChild(li);
     }
 }
