@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Menedżer zadań</title>
 
-    <!-- Ikonki -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <style>
@@ -15,7 +14,7 @@
         }
 
         .box {
-            background: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(10px);
             padding: 25px;
             max-width: 520px;
@@ -26,7 +25,6 @@
 
         h2 {
             text-align: center;
-            margin-bottom: 15px;
         }
 
         input {
@@ -34,27 +32,16 @@
             width: 65%;
             border-radius: 10px;
             border: 1px solid #ccc;
-            outline: none;
-        }
-
-        input:focus {
-            border: 1px solid #6c8cff;
         }
 
         button {
-            padding: 12px;
+            padding: 10px;
             margin: 3px;
             border: none;
             border-radius: 10px;
             cursor: pointer;
             background: #6c8cff;
             color: white;
-            transition: 0.2s;
-        }
-
-        button:hover {
-            transform: scale(1.05);
-            background: #4e6ee6;
         }
 
         li {
@@ -66,6 +53,24 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: grab;
+            position: relative;
+        }
+
+        li.dragging {
+            opacity: 0.5;
+        }
+
+        /* Linia pokazująca miejsce */
+        li.drag-over::before {
+            content: "";
+            position: absolute;
+            top: -4px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #6c8cff;
+            border-radius: 2px;
         }
 
         .done {
@@ -89,16 +94,8 @@
             background: #ff6b6b;
         }
 
-        .delete-btn:hover {
-            background: #e74c3c;
-        }
-
         .done-btn {
             background: #2ecc71;
-        }
-
-        .done-btn:hover {
-            background: #27ae60;
         }
 
         .icons {
@@ -113,9 +110,7 @@
     <h2><i class="fa-solid fa-list-check"></i> Menedżer zadań</h2>
 
     <input type="text" id="taskInput" placeholder="Wpisz zadanie">
-    <button onclick="addTask()">
-        <i class="fa-solid fa-plus"></i>
-    </button>
+    <button onclick="addTask()"><i class="fa-solid fa-plus"></i></button>
 
     <p id="counter"></p>
 
@@ -123,9 +118,7 @@
         <button onclick="setFilter('all')">Wszystkie</button>
         <button onclick="setFilter('active')">Aktywne</button>
         <button onclick="setFilter('done')">Wykonane</button>
-        <button onclick="deleteDone()">
-            <i class="fa-solid fa-trash"></i>
-        </button>
+        <button onclick="deleteDone()"><i class="fa-solid fa-trash"></i></button>
     </div>
 
     <ul id="taskList"></ul>
@@ -134,6 +127,7 @@
 <script>
 let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 let filter = "all";
+let draggedIndex = null;
 
 document.getElementById("taskInput").addEventListener("keypress", function(e) {
     if (e.key === "Enter") addTask();
@@ -200,7 +194,39 @@ function renderTasks() {
         if (filter === "done" && !tasks[i].done) continue;
 
         let li = document.createElement("li");
+        li.draggable = true;
+        li.dataset.index = i;
+
         if (tasks[i].done) li.classList.add("done");
+
+        li.addEventListener("dragstart", function() {
+            draggedIndex = this.dataset.index;
+            li.classList.add("dragging");
+        });
+
+        li.addEventListener("dragend", function() {
+            li.classList.remove("dragging");
+            document.querySelectorAll("li").forEach(el => el.classList.remove("drag-over"));
+        });
+
+        li.addEventListener("dragover", function(e) {
+            e.preventDefault();
+            document.querySelectorAll("li").forEach(el => el.classList.remove("drag-over"));
+            li.classList.add("drag-over");
+        });
+
+        li.addEventListener("dragleave", function() {
+            li.classList.remove("drag-over");
+        });
+
+        li.addEventListener("drop", function() {
+            let droppedIndex = this.dataset.index;
+            let temp = tasks[draggedIndex];
+            tasks.splice(draggedIndex, 1);
+            tasks.splice(droppedIndex, 0, temp);
+            saveTasks();
+            renderTasks();
+        });
 
         let span = document.createElement("span");
         span.innerText = tasks[i].text + " (" + tasks[i].date + ")";
