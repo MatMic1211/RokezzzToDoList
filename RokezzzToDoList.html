@@ -1,19 +1,19 @@
-<!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Menedżer zadań</title>
-
+    <title>Task App</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <style>
-        body {
+        body 
+		{
             font-family: Arial, sans-serif;
             background: #e6ecf0;
             padding: 40px;
         }
 
-        .box {
+        .container 
+		{
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
             padding: 25px;
@@ -23,43 +23,51 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
-        h2 {
-            text-align: center;
-        }
+        h2 
+		{ 
+		text-align: center; 
+		}
 
-        .lang-switch {
+        .top-bar 
+		{
             display: flex;
             justify-content: center;
-            margin-bottom: 15px;
             gap: 5px;
+            margin-bottom: 15px;
         }
 
-        .lang-switch button {
+        .top-bar button 
+		{
             background: #ddd;
             color: black;
             padding: 6px 12px;
         }
 
-        .lang-switch button.active {
+        .top-bar .active 
+		
+		{
             background: #6c8cff;
             color: white;
         }
-
-        .add-task {
+		
+        .task-input 
+		{
             display: flex;
             justify-content: center;
             gap: 5px;
             margin-bottom: 10px;
         }
 
-        .add-task input {
+        .task-input input 
+		{
             padding: 12px;
             width: 60%;
             border-radius: 10px;
             border: 1px solid #ccc;
         }
 
-        button {
+        button 
+		{
             padding: 10px;
             margin: 3px;
             border: none;
@@ -68,6 +76,18 @@
             background: #6c8cff;
             color: white;
         }
+
+        select 
+		{
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            background: white;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        ul { padding: 0; }
 
         li {
             list-style: none;
@@ -82,11 +102,17 @@
             position: relative;
         }
 
-        li.dragging {
-            opacity: 0.5;
+        li.done 
+		{
+            text-decoration: line-through;
+            color: gray;
+            background: #e0e0e0;
         }
 
-        li.drag-over::before {
+        li.dragging { opacity: 0.5; }
+
+        li.drag-over::before 
+		{
             content: "";
             position: absolute;
             top: -4px;
@@ -97,90 +123,72 @@
             border-radius: 2px;
         }
 
-        .done {
-            text-decoration: line-through;
-            color: gray;
-            background: #e0e0e0;
-        }
-
-        #counter {
-            margin: 15px 0;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .filters {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .delete-btn {
-            background: #ff6b6b;
-        }
-
-        .done-btn {
-            background: #2ecc71;
-        }
-
-        .icons {
-            display: flex;
+        .actions 
+		{
+            display: flex;	
             gap: 5px;
         }
+
+        .btn-delete { background: #ff6b6b; }
+        .btn-done { background: #2ecc71; }
+
+        #stats 
+		{
+            text-align: center;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .filters { text-align: center; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-<div class="box">
-    <h2 id="title"><i class="fa-solid fa-list-check"></i> Menedżer zadań</h2>
+<div class="container">
+    <h2 id="appTitle"><i class="fa-solid fa-list-check"></i> Menedżer zadań</h2>
 
-    <div class="lang-switch">
-        <button id="plBtn">PL</button>
-        <button id="enBtn">EN</button>
+    <div class="top-bar">
+        <button id="langPL">PL</button>
+        <button id="langEN">EN</button>
     </div>
 
-    <div class="add-task">
-        <input type="text" id="taskInput" placeholder="Wpisz zadanie">
-        <button id="addBtn">
-            <i class="fa-solid fa-plus"></i> Dodaj
-        </button>
+    <div class="task-input">
+        <input type="text" id="inputTask" placeholder="Wpisz zadanie">
+        <button id="btnAdd"><i class="fa-solid fa-plus"></i> Dodaj</button>
     </div>
 
-    <p id="counter"></p>
+    <p id="stats"></p>
 
     <div class="filters">
-        <button id="allBtn">Wszystkie</button>
-        <button id="activeBtn">Aktywne</button>
-        <button id="doneFilterBtn">Wykonane</button>
-        <button id="deleteDoneBtn">
-            <i class="fa-solid fa-trash"></i> Usuń wykonane
-        </button>
+        <button id="fAll">Wszystkie</button>
+        <button id="fActive">Aktywne</button>
+        <button id="fDone">Wykonane</button>
+        <button id="fDeleteDone"><i class="fa-solid fa-trash"></i> Usuń wykonane</button>
     </div>
 
-    <ul id="taskList"></ul>
+    <div class="filters">
+        <select id="sortBox"></select>
+    </div>
+
+    <ul id="list"></ul>
 </div>
 
-</body>
-
 <script>
-const taskInput = document.getElementById("taskInput");
-const taskList = document.getElementById("taskList");
-const counter = document.getElementById("counter");
+const input = document.getElementById("inputTask");
+const list = document.getElementById("list");
+const stats = document.getElementById("stats");
+const sortBox = document.getElementById("sortBox");
 
-const plBtn = document.getElementById("plBtn");
-const enBtn = document.getElementById("enBtn");
-const addBtn = document.getElementById("addBtn");
-const allBtn = document.getElementById("allBtn");
-const activeBtn = document.getElementById("activeBtn");
-const doneFilterBtn = document.getElementById("doneFilterBtn");
-const deleteDoneBtn = document.getElementById("deleteDoneBtn");
+let data = JSON.parse(localStorage.getItem("tasks")) || [];
+let currentFilter = localStorage.getItem("filter") || "all";
+let sortType = localStorage.getItem("sortMode") || "date";
+let currentLang = localStorage.getItem("lang") || "pl";
+let dragIndex = null;
 
-let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-let filter = localStorage.getItem("filter") || "all";
-let draggedIndex = null;
-let lang = localStorage.getItem("lang") || "pl";
-
-const translations = {
-    pl: {
+const txt = 
+{
+    pl: 
+	{
         title: "Menedżer zadań",
         placeholder: "Wpisz zadanie",
         add: "Dodaj",
@@ -188,9 +196,15 @@ const translations = {
         active: "Aktywne",
         done: "Wykonane",
         deleteDone: "Usuń wykonane",
-        counter: "Wszystkie: {all} | Aktywne: {active} | Wykonane: {done}"
+        stats: "Wszystkie: {all} | Aktywne: {active} | Wykonane: {done}",
+        s1: "Sortuj: data",
+        s2: "Sortuj: A-Z",
+        s3: "Sortuj: Z-A",
+        s4: "Najpierw niewykonane",
+		s5: "Najpierw wykonane"
     },
-    en: {
+    en: 
+	{
         title: "Task Manager",
         placeholder: "Enter task",
         add: "Add",
@@ -198,173 +212,192 @@ const translations = {
         active: "Active",
         done: "Completed",
         deleteDone: "Delete completed",
-        counter: "All: {all} | Active: {active} | Completed: {done}"
+        stats: "All: {all} | Active: {active} | Completed: {done}",
+        s1: "Sort by: date",
+        s2: "Sort by: A-Z",
+        s3: "Sort by: Z-A",
+        s4: "Undone first",
+		s5: "Done first"
     }
 };
 
-taskInput.addEventListener("keypress", e => {
-    if (e.key === "Enter") addTask();
-});
-
-addBtn.onclick = addTask;
-allBtn.onclick = () => setFilter("all");
-activeBtn.onclick = () => setFilter("active");
-doneFilterBtn.onclick = () => setFilter("done");
-deleteDoneBtn.onclick = deleteDone;
-plBtn.onclick = () => setLanguage("pl");
-enBtn.onclick = () => setLanguage("en");
-
-function saveTasks() {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
+function save() 
+{
+    localStorage.setItem("tasks", JSON.stringify(data));
 }
 
-function addTask() {
-    const text = taskInput.value.trim();
-    if (!text) return;
+function addNewTask() 
+{
+    const value = input.value.trim();
+    if (!value) return;
 
-    tasks.push({
-        text,
+    data.push(
+	{
+        text: value,
         done: false,
-        date: new Date().toLocaleString()
+        date: new Date().toISOString()
     });
 
-    taskInput.value = "";
-    saveTasks();
-    renderTasks();
+    input.value = "";
+    save();
+    draw();
 }
 
-function deleteTask(index) {
-    tasks.splice(index, 1);
-    saveTasks();
-    renderTasks();
+function removeTask(i) 
+{
+    data.splice(i, 1);
+    save();
+    draw();
 }
 
-function toggleTask(index) {
-    tasks[index].done = !tasks[index].done;
-    saveTasks();
-    renderTasks();
+function toggleDone(i) 
+{
+    data[i].done = !data[i].done;
+    save();
+    draw();
 }
 
-function deleteDone() {
-    tasks = tasks.filter(t => !t.done);
-    saveTasks();
-    renderTasks();
+function clearDone() 
+{
+    data = data.filter(t => !t.done);
+    save();
+    draw();
 }
 
-function setFilter(f) {
-    filter = f;
-    localStorage.setItem("filter", f);
-    renderTasks();
+function setFilterMode(mode) 
+{
+    currentFilter = mode;
+    localStorage.setItem("filter", mode);
+    draw();
 }
 
-function setLanguage(selectedLang) {
-    lang = selectedLang;
-    localStorage.setItem("lang", lang);
-    applyTranslations();
-    renderTasks();
-    updateLangButtons();
+function changeLanguage(l) 
+{
+    currentLang = l;
+    localStorage.setItem("lang", l);
+    applyText();
+    updateSortBox();
+    draw();
 }
 
-function updateLangButtons() {
-    plBtn.classList.remove("active");
-    enBtn.classList.remove("active");
-    if (lang === "pl") plBtn.classList.add("active");
-    else enBtn.classList.add("active");
+function updateSortBox() 
+{
+    sortBox.innerHTML = `
+        <option value="date">${txt[currentLang].s1}</option>
+        <option value="az">${txt[currentLang].s2}</option>
+        <option value="za">${txt[currentLang].s3}</option>
+        <option value="undone">${txt[currentLang].s4}</option>
+		<option value="done">${txt[currentLang].s5}</option>
+    `;
+    sortBox.value = sortType;
 }
 
-function applyTranslations() {
-    document.getElementById("title").innerHTML =
-        '<i class="fa-solid fa-list-check"></i> ' + translations[lang].title;
+function applyText() 
+{
+    document.getElementById("appTitle").innerHTML =
+        '<i class="fa-solid fa-list-check"></i> ' + txt[currentLang].title;
 
-    taskInput.placeholder = translations[lang].placeholder;
-    addBtn.innerHTML = '<i class="fa-solid fa-plus"></i> ' + translations[lang].add;
-    allBtn.innerText = translations[lang].all;
-    activeBtn.innerText = translations[lang].active;
-    doneFilterBtn.innerText = translations[lang].done;
-    deleteDoneBtn.innerHTML =
-        '<i class="fa-solid fa-trash"></i> ' + translations[lang].deleteDone;
+    input.placeholder = txt[currentLang].placeholder;
+    document.getElementById("btnAdd").innerHTML =
+        '<i class="fa-solid fa-plus"></i> ' + txt[currentLang].add;
+
+    document.getElementById("fAll").innerText = txt[currentLang].all;
+    document.getElementById("fActive").innerText = txt[currentLang].active;
+    document.getElementById("fDone").innerText = txt[currentLang].done;
+    document.getElementById("fDeleteDone").innerHTML =
+        '<i class="fa-solid fa-trash"></i> ' + txt[currentLang].deleteDone;
 }
 
-function updateCounter() {
-    const all = tasks.length;
-    const done = tasks.filter(t => t.done).length;
+function updateStats() 
+{
+    const all = data.length;
+    const done = data.filter(t => t.done).length;
     const active = all - done;
 
-    counter.innerText = translations[lang].counter
+    stats.innerText = txt[currentLang].stats
         .replace("{all}", all)
         .replace("{active}", active)
         .replace("{done}", done);
 }
 
-function createTaskElement(task, index) {
-    const li = document.createElement("li");
-    li.draggable = true;
+function draw() 
+{
+    list.innerHTML = "";
+    updateStats();
 
-    if (task.done) li.classList.add("done");
+    let arr = [...data];
 
-    li.addEventListener("dragstart", () => {
-        draggedIndex = index;
-        li.classList.add("dragging");
-    });
+    if (sortType === "date") arr.sort((a,b)=> new Date(a.date)-new Date(b.date));
+    if (sortType === "az") arr.sort((a,b)=> a.text.localeCompare(b.text));
+    if (sortType === "za") arr.sort((a,b)=> b.text.localeCompare(a.text));
+    if (sortType === "undone") arr.sort((a,b)=> a.done - b.done);
+	if (sortType === "done") arr.sort((a,b)=> b.done - a.done);
 
-    li.addEventListener("dragend", () => {
-        li.classList.remove("dragging");
-        document.querySelectorAll("li").forEach(el => el.classList.remove("drag-over"));
-    });
+    arr.forEach((task, i) => 
+	{
+        if (currentFilter === "active" && task.done) return;
+        if (currentFilter === "done" && !task.done) return;
 
-    li.addEventListener("dragover", e => {
-        e.preventDefault();
-        document.querySelectorAll("li").forEach(el => el.classList.remove("drag-over"));
-        li.classList.add("drag-over");
-    });
+        const li = document.createElement("li");
+        li.draggable = true;
+        if (task.done) li.classList.add("done");
 
-    li.addEventListener("dragleave", () => li.classList.remove("drag-over"));
+        li.addEventListener("dragstart", () => dragIndex = i);
+        li.addEventListener("drop", () => 
+		{
+            const tmp = data[dragIndex];
+            data.splice(dragIndex, 1);
+            data.splice(i, 0, tmp);
+            save();
+            draw();
+        });
+        li.addEventListener("dragover", e => e.preventDefault());
 
-    li.addEventListener("drop", () => {
-        const temp = tasks[draggedIndex];
-        tasks.splice(draggedIndex, 1);
-        tasks.splice(index, 0, temp);
-        saveTasks();
-        renderTasks();
-    });
+        const span = document.createElement("span");
+        span.innerText = `${task.text} (${new Date(task.date).toLocaleString()})`;
+        span.onclick = () => toggleDone(i);
 
-    const span = document.createElement("span");
-    span.innerText = `${task.text} (${task.date})`;
-    span.onclick = () => toggleTask(index);
+        const actions = document.createElement("div");
+        actions.className = "actions";
 
-    const icons = document.createElement("div");
-    icons.classList.add("icons");
+        const doneBtn = document.createElement("button");
+        doneBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
+        doneBtn.className = "btn-done";
+        doneBtn.onclick = () => toggleDone(i);
 
-    const doneBtn = document.createElement("button");
-    doneBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
-    doneBtn.classList.add("done-btn");
-    doneBtn.onclick = () => toggleTask(index);
+        const delBtn = document.createElement("button");
+        delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+        delBtn.className = "btn-delete";
+        delBtn.onclick = () => removeTask(i);
 
-    const delBtn = document.createElement("button");
-    delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-    delBtn.classList.add("delete-btn");
-    delBtn.onclick = () => deleteTask(index);
-
-    icons.append(doneBtn, delBtn);
-    li.append(span, icons);
-
-    return li;
-}
-
-function renderTasks() {
-    taskList.innerHTML = "";
-    updateCounter();
-
-    tasks.forEach((task, i) => {
-        if (filter === "active" && task.done) return;
-        if (filter === "done" && !task.done) return;
-        taskList.appendChild(createTaskElement(task, i));
+        actions.append(doneBtn, delBtn);
+        li.append(span, actions);
+        list.appendChild(li);
     });
 }
 
-applyTranslations();
-updateLangButtons();
-renderTasks();
+document.getElementById("btnAdd").onclick = addNewTask;
+input.addEventListener("keypress", e => { if (e.key === "Enter") addNewTask(); });
+
+document.getElementById("fAll").onclick = () => setFilterMode("all");
+document.getElementById("fActive").onclick = () => setFilterMode("active");
+document.getElementById("fDone").onclick = () => setFilterMode("done");
+document.getElementById("fDeleteDone").onclick = clearDone;
+
+document.getElementById("langPL").onclick = () => changeLanguage("pl");
+document.getElementById("langEN").onclick = () => changeLanguage("en");
+
+sortBox.onchange = () => 
+{
+    sortType = sortBox.value;
+    localStorage.setItem("sortMode", sortType);
+    draw();
+};
+
+applyText();
+updateSortBox();
+draw();
 </script>
 
+</body>
 </html>
